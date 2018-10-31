@@ -1,0 +1,13 @@
+syntax = "proto3";
+
+import "google/protobuf/empty.proto";
+
+package protos;
+
+message HelloMessage {
+    string message = 1;
+}
+
+service HelloService {
+    rpc Hello(google.protobuf.Empty) returns (HelloMessage);
+}

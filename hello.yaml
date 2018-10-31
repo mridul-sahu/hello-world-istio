@@ -1,0 +1,144 @@
+apiVersion: apps/v1beta1
+kind: StatefulSet
+metadata:
+  name: hello
+spec:
+  selector:
+    matchLabels:
+      name: hello
+  serviceName: "hello-service"
+  replicas: 3
+  template:
+    metadata:
+      labels:
+        name: hello
+    spec:
+      terminationGracePeriodSeconds: 10
+      containers:
+      - name: hello
+        image: gcr.io/crispy-206704/hello-service:1.5
+        ports:
+        - containerPort: 3000
+          name: http-hello-port
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: hello-service
+  labels:
+    name: hello-service
+spec:
+  ports:
+  - port: 3000
+    targetPort: 3000
+    name: http-hello-port
+  clusterIP: None
+  selector:
+    name: hello
+
+#apiVersion: apps/v1
+#kind: Deployment
+#metadata:
+#  name: hello-deployment
+#  labels:
+#    app: hello
+#spec:
+#  selector:
+#    matchLabels:
+#      app: hello
+#  replicas: 2
+#  template:
+#    metadata:
+#      labels:
+#        app: hello
+#    spec:
+#      containers:
+#      - name: hello-container
+#        image: gcr.io/crispy-206704/hello-service:1.5
+#        imagePullPolicy: Always
+#        ports:
+#        - name: http-hello-port
+#          containerPort: 3000
+#---
+#apiVersion: v1
+#kind: Service
+#metadata:
+#  name: hello-service
+#spec:
+#  selector:
+#    app: hello
+#  ports:
+#  - port: 3000
+#    name: http-hello-port
+#    targetPort: 3000
+
+---
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: proxy-deployment
+  labels:
+    app: proxy
+spec:
+  selector:
+    matchLabels:
+      app: proxy
+  replicas: 1
+  template:
+    metadata:
+      labels:
+        app: proxy
+      annotations:
+        sidecar.istio.io/inject: "false"
+    spec:
+      containers:
+      - name: proxy-container
+        image: gcr.io/crispy-206704/hello-proxy:1.3
+        imagePullPolicy: Always
+        ports:
+        - name: http-proxy-port
+          containerPort: 8080
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: proxy-service
+spec:
+  selector:
+    app: proxy
+  ports:
+  - port: 8080
+    name: http-proxy-port
+    targetPort: 8080
+---
+apiVersion: networking.istio.io/v1alpha3
+kind: Gateway
+metadata:
+  name: service-gateway
+spec:
+  selector:
+    istio: ingressgateway # use istio default controller
+  servers:
+  - port:
+      number: 80
+      name: http
+      protocol: HTTP
+    hosts:
+    - "*"
+---
+apiVersion: networking.istio.io/v1alpha3
+kind: VirtualService
+metadata:
+  name: hello-route
+spec:
+  hosts:
+  - "*"
+  gateways:
+  - service-gateway
+  http:
+  - route:
+    - destination:
+        host: proxy-service
+        port:
+          number: 8080
+---
