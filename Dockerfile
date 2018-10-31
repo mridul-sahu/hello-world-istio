@@ -1,8 +1,8 @@
 FROM gcr.io/crispy-206704/base:1.1
 
-RUN go get -v bitbucket.org/crispyapp/services/deployment/hello
+RUN go get -v github.com/mridul-sahu/hello-world-istio
 
-WORKDIR /go/src/bitbucket.org/crispyapp/services/deployment/hello
+WORKDIR /go/src/github.com/mridul-sahu/hello-world-istio
 
 COPY . .
 
