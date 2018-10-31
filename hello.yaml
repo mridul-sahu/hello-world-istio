@@ -17,6 +17,7 @@ spec:
       containers:
       - name: hello
         image: mridulsahu/hello-service:1.0
+        imagePullPolicy: Always
         ports:
         - containerPort: 3000
           name: http-hello-port

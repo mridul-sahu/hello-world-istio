@@ -12,4 +12,4 @@ RUN go get -v
 
 EXPOSE 3000
 
-CMD [ "hello" ]
+CMD [ "hello-world-istio" ]
